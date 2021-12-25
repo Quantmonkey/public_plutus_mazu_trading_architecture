@@ -18,7 +18,6 @@ from helper_models.data.hygieia import Hygieia
 from sgx_equities_strategy_config import SGXEquitiesStrategyConfig
 exception_handler = ExceptionHandler()
 
-
 class SGXEquitiesStrategyService(StrategyService):
     """ Main logic for SGXEquities, inherited from Algotrader StrategyService Class
     """
@@ -50,7 +49,7 @@ class SGXEquitiesStrategyService(StrategyService):
         self.previous_hourly_update_datetime = None
 
     def on_tick(self, tick):
-        """ Called whenever we receive an Algotrader tick object.
+        """Called whenever we receive an Algotrader tick object.
         """
         if self.ready_to_start:
             self.let_data_model_handle_tick_data(tick)
@@ -58,14 +57,14 @@ class SGXEquitiesStrategyService(StrategyService):
             self.main_event_loop()
 
     def on_trade(self, trade):
-        """ Called whenever we receive an Algotrader trade object.
+        """Called whenever we receive an Algotrader trade object.
         """
         if self.ready_to_start:
             self.let_data_model_handle_trade_data(trade)
             self.current_time = self.data_model.current_time
 
     def on_bar(self, bar):
-        """ Called whenever we receive an Algotrader bar object.
+        """Called whenever we receive an Algotrader bar object.
         """
         if self.ready_to_start:
             self.let_data_model_handle_bar_data(bar)
@@ -80,12 +79,12 @@ class SGXEquitiesStrategyService(StrategyService):
             self.persistence_thread.start()
 
     def on_order_status(self, order_status):
-        """ Called whenever we receive an Algotrader order_status object
+        """Called whenever we receive an Algotrader order_status object
         """
         self.execution_model.receive_order_status_and_update(order_status)
 
     def on_transaction(self, transaction):
-        """ Called whenever we receive an Algotrader transaction object.
+        """Called whenever we receive an Algotrader transaction object.
         """
         self.portfolio_model.receive_transaction_and_update(transaction)
 
@@ -128,7 +127,7 @@ class SGXEquitiesStrategyService(StrategyService):
             self.execution_model.send_pending_orders()
 
     def check_if_time_to_do_periodic_updates(self):
-        """ Contains logic for all updates that are done periodically.
+        """Contains logic for all updates that are done periodically.
         """
         if self.current_time is not None:
             weekly_update_needed = (self.current_time - self.previous_weekly_update_datetime) >= pd.Timedelta("7days")
@@ -152,7 +151,7 @@ class SGXEquitiesStrategyService(StrategyService):
                 self.portfolio_model.scrape_cdp_pool_data()
 
     def initialise_previous_update_datetimes_on_start(self):
-        """ Called on strategy start, initialise all previous update datetimes for periodic updating logic to work.
+        """Called on strategy start, initialise all previous update datetimes for periodic updating logic to work.
         """
         time_now = self.strategy_config.BACKTEST_START_DATE if self.strategy_config.BACKTEST_START_DATE is not None else datetime.now()
 
@@ -275,7 +274,7 @@ class SGXEquitiesStrategyService(StrategyService):
                 self.execution_model = SGXEquitiesExecutionModel(self.strategy_config)
 
     def prepare_universe_model(self):
-        """ Called on_start, prepares universe model by doing an initial universe filtering and clustering.
+        """Called on_start, prepares universe model by doing an initial universe filtering and clustering.
         """
         time_now = self.strategy_config.BACKTEST_START_DATE if self.strategy_config.BACKTEST_START_DATE else datetime.now()
 
@@ -287,12 +286,12 @@ class SGXEquitiesStrategyService(StrategyService):
         self.universe_model.propagate_universes([self.data_model, self.alpha_model, self.portfolio_model, self.execution_model])
 
     def prepare_data_model(self):
-        """ Called on_start, calls data model to initialise data structures with trading universe
+        """Called on_start, calls data model to initialise data structures with trading universe
         """
         self.data_model.assign_universe_to_data_structures()
 
     def prepare_alpha_model(self):
-        """ Called on_start, alpha model calls sampler to get volume bar size, and initialise data structures
+        """Called on_start, alpha model calls sampler to get volume bar size, and initialise data structures
         """
         time_now = self.strategy_config.BACKTEST_START_DATE if self.strategy_config.BACKTEST_START_DATE else datetime.now()
         self.alpha_model.fit_sampler_with_volume_intervals(time_now)
@@ -301,38 +300,38 @@ class SGXEquitiesStrategyService(StrategyService):
         self.alpha_model.fit_factor_models_with_downstream_models()
 
     def prepare_portfolio_model(self):
-        """ Called on_start, portfolio model initialises data structures
+        """Called on_start, portfolio model initialises data structures
         """
         self.portfolio_model.initialise_data_structures()
         self.portfolio_model.scrape_cdp_pool_data()
 
     def prepare_execution_model(self):
-        """ Called on_start, execution model initialises VWAP and child order manager with latest historical data.
+        """Called on_start, execution model initialises VWAP and child order manager with latest historical data.
         """
         # Download historical data for vwap and child order manager
         time_now = self.strategy_config.BACKTEST_START_DATE if self.strategy_config.BACKTEST_START_DATE else datetime.now()
         self.execution_model.initialise_data_and_models(time_now)
 
     def let_data_model_handle_tick_data(self, tick):
-        """ Data model collects tick and propagates data to all primary models
+        """Data model collects tick and propagates data to all primary models
         """
         self.data_model.collect_equities_tick(tick)
         self.data_model.propagate_data([self.alpha_model, self.portfolio_model, self.execution_model])
 
     def let_data_model_handle_bar_data(self, bar):
-        """ Data model collects bar and propagates data to all primary models
+        """Data model collects bar and propagates data to all primary models
         """
         self.data_model.collect_currencies_bar(bar)
         self.data_model.propagate_data([self.alpha_model, self.portfolio_model, self.execution_model])
 
     def let_data_model_handle_trade_data(self, trade):
-        """ Data model collects trade and propagates data to all primary models
+        """Data model collects trade and propagates data to all primary models
         """
         self.data_model.collect_equities_trade(trade)
         self.data_model.propagate_data([self.alpha_model, self.portfolio_model, self.execution_model])
 
     def on_init(self, lifecycle_event):
-        """ Algotrader on_init method, which is called when strategy first begins, before on_start
+        """Algotrader on_init method, which is called when strategy first begins, before on_start
         """
         self.strategy_config = SGXEquitiesStrategyConfig(self)
         self.persistence = SGXEquitiesPersistence(self.strategy_config)
@@ -342,7 +341,7 @@ class SGXEquitiesStrategyService(StrategyService):
         self.initiate_models_and_persistence()
 
     def on_start(self, lifecycle_event):
-        """ Algotrader on_start method, which is called when strategy first begins, after on_init
+        """Algotrader on_start method, which is called when strategy first begins, after on_init
         """
         self.strategy_config.verbose.orate_strategy_starter_type(self.strategy_config.BACKTEST_START_DATE)
 
@@ -356,31 +355,18 @@ class SGXEquitiesStrategyService(StrategyService):
             self.ready_to_start = True
 
     def on_exit(self, lifecycle_event):
-        """ Algotrader on_exit method, called when backtesting has ended.
+        """Algotrader on_exit method, called when backtesting has ended.
         """
         pickling_process = threading.Thread(target=self.save_backtest_results)
         pickling_process.start()
         self.backtest_recorder.block_strategy_from_exiting_before_pickling()
 
     def save_backtest_results(self):
-        """ Called on_exit, calls backtest recorder to save backtest results
+        """Called on_exit, calls backtest recorder to save backtest results
         """
         self.alpha_model.get_factors_to_save_their_features()
 
-        parameters = {"FILTER_PERCENTILE": self.strategy_config.FILTER_PERCENTILE,
-                      "LG_PRICE_COINT_LENGTH_MULTIPLIER": self.strategy_config.SERIAL_COINTEGRATION_LG_PRICE_COINT_LENGTH_MULTIPLIER,
-                      "HALFLIFE_SENSITIVITY_MULTIPLIER": self.strategy_config.SERIAL_COINTEGRATION_HALFLIFE_SENSITIVITY_MULTIPLIER,
-                      "TAKE_PROFIT_STD_MULTIPLIER": self.strategy_config.SERIAL_COINTEGRATION_TAKE_PROFIT_STD_MULTIPLIER,
-                      "STOP_LOSS_STD_MULTIPLIER": self.strategy_config.SERIAL_COINTEGRATION_STOP_LOSS_STD_MULTIPLIER}
-
-        realized_pnl = self.backtest_recorder.get_realized_pnl()
-        transactions = self.backtest_recorder.get_transactions()
-        portfolios = self.backtest_recorder.get_portfolio_results()
-
-        dict_to_be_pickled = {'parameters': parameters,
-                              'realized_pnl': realized_pnl,
-                              'transactions': transactions,
-                              'portfolios': portfolios}
+        # REDACTED
 
         self.backtest_recorder.record_backtest_results(dict_to_be_pickled)
 
@@ -388,13 +374,7 @@ class SGXEquitiesStrategyService(StrategyService):
 """
 AlgoTrader Python to Java
 """
-# Run with profiler (unstable as of 23/12/2021)
-# import yappi
-# with yappi.run():
 only_subscribe_methods_list = ["onInit", "onStart", "onRunning", "onBar", "onTick", "onTrade", "onTransaction", "onOrderStatus", "onExit"]
 strategy = SGXEquitiesStrategyService()
 _python_to_at_entry_point = connect_to_algotrader(strategy, only_subscribe_methods_list)
 wait_for_algotrader_to_disconnect(_python_to_at_entry_point)
-
-# Record profiler stats on exit
-# yappi.get_func_stats().save('yappi_pstats.prof', type='pstat')
